@@ -2,9 +2,11 @@ import React, {useEffect, useMemo, useState} from 'react';
 import {getCharacterByName} from '../../services/ServerWork';
 import {CHARACTERS, EARTH_NAME} from '../../constants/Constants';
 import './PopularityBarChart.scss';
+import Spinner from "../Spinner";
 
 const PopularityBarChart = () => {
     const [charactersData, setCharactersData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const charPromises = CHARACTERS.map((char) => {
@@ -18,8 +20,12 @@ const PopularityBarChart = () => {
                     return [...arr, { ...filteredRes[0], color: CHARACTERS.find((char) => char.name === filteredRes[0].name).color }];
                 }, []);
                 setCharactersData(newResults);
+                setIsLoading(false);
             })
-            .catch((e) => console.log(e));
+            .catch((e) => {
+                console.log(e);
+                setIsLoading(false);
+            });
     }, []);
 
     const Legend = () => {
@@ -46,13 +52,19 @@ const PopularityBarChart = () => {
 
     return (
       <div className="bar-chart">
-          <h1>Bar Chart of Popularity</h1>
-          <Legend />
-          <div className="bar-chart__container">
-              {charactersData.map((char) => (
-                  <Bar key={char.name} data={char} />
-              ))}
-          </div>
+          {isLoading ? (
+              <Spinner />
+          ) : (
+              <>
+                  <h1>Bar Chart of Popularity</h1>
+                  <Legend />
+                  <div className="bar-chart__container">
+                      {charactersData.map((char) => (
+                          <Bar key={char.name} data={char} />
+                      ))}
+                  </div>
+              </>
+          )}
       </div>
     );
 };
