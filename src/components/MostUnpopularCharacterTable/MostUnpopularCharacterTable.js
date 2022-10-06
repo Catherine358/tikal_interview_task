@@ -1,16 +1,20 @@
 import React, {useEffect, useState} from 'react';
-import {EPISODE, MOST_UNPOPULAR_TABLE, ORIGIN_DIMENSION_VALUE, ORIGIN_NAME_VALUE} from '../../constants/Constants';
+import {
+    EARTH_NAME,
+    EPISODE,
+    MOST_UNPOPULAR_TABLE,
+    ORIGIN_DIMENSION_VALUE,
+    ORIGIN_NAME_VALUE
+} from '../../constants/Constants';
 import {getAllEpisodes, getMultipleCharacters} from '../../services/ServerWork';
 import './MostUnpopularCharacterTable.scss';
 
 const MostUnpopularCharacterTable = () => {
-
-    const [page, setPage] = useState(1);
-    const [numberOfEpisodesAccordingToChar, setNumberOfEpisodesAccordingToChar] = useState({});
+    const [numberOfEpisodesAccordingToChar, setNumberOfEpisodesAccordingToChar] = useState(undefined);
     const [mostUnpopularChar, setMostUnpopularChar] = useState(undefined);
 
     const composeResultsHandler = (results) => {
-        let newCharObj = {...numberOfEpisodesAccordingToChar};
+        let newCharObj = {};
         results.forEach((result) => {
             newCharObj = result.characters.reduce((objChar, currChar) => {
                 const currCharSplit = currChar.split('/');
@@ -28,34 +32,62 @@ const MostUnpopularCharacterTable = () => {
         setNumberOfEpisodesAccordingToChar(newCharObj);
     };
 
-    const getAllEpisodesHandler = () => {
-        getAllEpisodes(page)
-            .then((res) => {
-                composeResultsHandler(res.results);
-                const prevPage = page;
-                setPage(res.info.next ? prevPage + 1 : 0);
-            });
+    const getAllEpisodesHandler = async () => {
+        let page = 1;
+        const episodes = [];
+        do {
+           try {
+              const res = await getAllEpisodes(page);
+              episodes.push(...res.results);
+              page = res.info.next ? page + 1 : -1;
+           } catch (e) {
+               console.log(e);
+           }
+        } while (page !== -1);
+        composeResultsHandler(episodes);
     };
 
-    const getMultipleFilteredCharactersHandler = () => {
-        const multipleCharUrl = Object.keys(numberOfEpisodesAccordingToChar).reduce((str, currKey) => {
-            return numberOfEpisodesAccordingToChar[currKey] > 1 ? str : str ? str + ',' + currKey : str + currKey;
-        }, '');
-        getMultipleCharacters(multipleCharUrl)
-            .then((res) => {
-                const filteredRes = res.filter((r) => r.origin.name === 'Earth (C-137)');
-                const randomIdxOfUnpopularChar = Math.floor(Math.random() * filteredRes.length);
-                setMostUnpopularChar(filteredRes[randomIdxOfUnpopularChar]);
-            });
+    const getMinNumberOfEpisodesHandler = (currMin) => {
+      const sortedValues = Object.values(numberOfEpisodesAccordingToChar).reduce((arr, curr) => {
+          return arr.includes(curr) ? arr : [
+              ...arr,
+              curr,
+          ].sort((a, b) => a > b ? 1 : -1);
+      }, []);
+        const idxOfMinNumberOfEpisodes = currMin > 0 ? sortedValues.findIndex((val) => val === currMin) + 1 : 0;
+        return sortedValues[idxOfMinNumberOfEpisodes];
+    };
+
+    const getMultipleFilteredCharactersHandler = async () => {
+        let minNumberOfEpisodes = 0;
+        minNumberOfEpisodes = getMinNumberOfEpisodesHandler(minNumberOfEpisodes);
+        do {
+            try {
+                const multipleCharUrl = Object.keys(numberOfEpisodesAccordingToChar).reduce((str, currKey) => {
+                    return numberOfEpisodesAccordingToChar[currKey] > minNumberOfEpisodes ? str : str ? str + ',' + currKey : str + currKey;
+                }, '');
+                const res = await getMultipleCharacters(multipleCharUrl);
+                const filteredRes = res.filter((r) => r.origin.name === EARTH_NAME);
+                if (filteredRes.length > 0) {
+                    const randomIdxOfUnpopularChar = Math.floor(Math.random() * filteredRes.length);
+                    setMostUnpopularChar(filteredRes[randomIdxOfUnpopularChar]);
+                    minNumberOfEpisodes = -1;
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        } while (minNumberOfEpisodes !== -1);
     };
 
     useEffect(() => {
-        if (page > 0) {
             getAllEpisodesHandler();
-        } else {
+    }, []);
+
+    useEffect(() => {
+        if (numberOfEpisodesAccordingToChar) {
             getMultipleFilteredCharactersHandler();
         }
-    }, [page]);
+    }, [numberOfEpisodesAccordingToChar]);
 
     const TableValue = ({ tableValue }) => {
         if (!mostUnpopularChar) {

@@ -10,3 +10,7 @@ export const MOST_UNPOPULAR_TABLE = [
 ];
 
 export const BASE_URL = 'https://rickandmortyapi.com/api';
+
+export const EARTH_NAME = 'Earth (C-137)';
+
+export const CHARACTERS = ['Rick Sanchez', 'Summer Smith', 'Morty Smith', 'Beth Smith', 'Jerry Smith'];
