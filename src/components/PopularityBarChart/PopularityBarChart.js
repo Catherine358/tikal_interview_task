@@ -2,11 +2,13 @@ import React, {useEffect, useMemo, useState} from 'react';
 import {getCharacterByName} from '../../services/ServerWork';
 import {CHARACTERS, EARTH_NAME} from '../../constants/Constants';
 import Spinner from '../Spinner';
+import ErrorIndicator from '../ErrorIndicator';
 import './PopularityBarChart.scss';
 
 const PopularityBarChart = () => {
     const [charactersData, setCharactersData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const charPromises = CHARACTERS.map((char) => {
@@ -24,7 +26,7 @@ const PopularityBarChart = () => {
             })
             .catch((e) => {
                 setIsLoading(false);
-                throw new Error(e);
+                setError(e.message);
             });
     }, []);
 
@@ -73,12 +75,18 @@ const PopularityBarChart = () => {
           ) : (
               <>
                   <h1>Bar Chart of Popularity</h1>
-                  <Legend />
-                  <div className="bar-chart__container">
-                      {charactersData.map((char) => (
-                          <Bar key={char.name} data={char} />
-                      ))}
-                  </div>
+                  {error ? (
+                      <ErrorIndicator error={error} />
+                  ) : (
+                      <>
+                          <Legend />
+                          <div className="bar-chart__container">
+                              {charactersData.map((char) => (
+                                  <Bar key={char.name} data={char} />
+                              ))}
+                          </div>
+                      </>
+                  )}
               </>
           )}
       </div>

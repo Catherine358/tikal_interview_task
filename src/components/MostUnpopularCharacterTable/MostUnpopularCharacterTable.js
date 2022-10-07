@@ -7,13 +7,15 @@ import {
     ORIGIN_NAME_VALUE
 } from '../../constants/Constants';
 import {getAllEpisodes, getMultipleCharacters} from '../../services/ServerWork';
+import Spinner from '../Spinner';
+import ErrorIndicator from '../ErrorIndicator';
 import './MostUnpopularCharacterTable.scss';
-import Spinner from "../Spinner";
 
 const MostUnpopularCharacterTable = () => {
     const [numberOfEpisodesAccordingToChar, setNumberOfEpisodesAccordingToChar] = useState(undefined);
     const [mostUnpopularChar, setMostUnpopularChar] = useState(undefined);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const composeResultsHandler = (results) => {
         let newCharObj = {};
@@ -44,7 +46,7 @@ const MostUnpopularCharacterTable = () => {
               page = res.info.next ? page + 1 : -1;
            } catch (e) {
                setIsLoading(false);
-               throw new Error(e);
+               setError(e.message);
            }
         } while (page !== -1);
         composeResultsHandler(episodes);
@@ -78,15 +80,15 @@ const MostUnpopularCharacterTable = () => {
                     minNumberOfEpisodes = -1;
                 }
             } catch (e) {
-                console.log(e);
                 setIsLoading(false);
+                setError(e.message);
             }
         } while (minNumberOfEpisodes !== -1);
     };
 
     useEffect(() => {
         setIsLoading(true);
-            getAllEpisodesHandler();
+        getAllEpisodesHandler();
     }, []);
 
     useEffect(() => {
@@ -117,19 +119,26 @@ const MostUnpopularCharacterTable = () => {
              <Spinner />
           ) : (
               <>
-                  <h1>The Most unpopular character from Earth C-137</h1>
-                  <table>
-                      <tbody>
-                      {MOST_UNPOPULAR_TABLE.map(({ tableKey, tableValue}) => (
-                          <tr key={tableKey}>
-                              <td>
-                                  {tableKey}
-                              </td>
-                              <TableValue tableValue={tableValue} />
-                          </tr>
-                      ))}
-                      </tbody>
-                  </table>
+                  <div className="unpopular-char__title-container">
+                      <h1>The Most unpopular character from Earth C-137</h1>
+                      {!!mostUnpopularChar && !!mostUnpopularChar.image && <img src={mostUnpopularChar.image} alt="Avatar of the most unpopular character" className="unpopular-char__title-container__img" />}
+                  </div>
+                  {error ? (
+                      <ErrorIndicator error={error} />
+                  ) : (
+                      <table>
+                          <tbody>
+                          {MOST_UNPOPULAR_TABLE.map(({ tableKey, tableValue}) => (
+                              <tr key={tableKey}>
+                                  <td>
+                                      {tableKey}
+                                  </td>
+                                  <TableValue tableValue={tableValue} />
+                              </tr>
+                          ))}
+                          </tbody>
+                      </table>
+                  )}
               </>
           )}
       </div>

@@ -5,6 +5,23 @@
   justify-content: center;
   align-items: center;
 
+  &__title-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 60%;
+    margin-bottom: 10px;
+
+    &__img {
+      width: 150px;
+      height: 150px;
+      margin-right: 10px;
+      margin-left: 10px;
+      border-radius: 8px;
+    }
+  }
+
   table {
     border: 1px solid black;
     width: 60%;

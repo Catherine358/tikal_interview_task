@@ -1,5 +1,14 @@
 .error-indicator {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   font-family:"Montserrat Medium", sans-serif;
   font-size: 16px;
   color: #393939;
+
+  img {
+    width: 150px;
+    height: 150px;
+  }
 }
