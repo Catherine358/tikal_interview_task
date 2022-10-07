@@ -43,8 +43,8 @@ const MostUnpopularCharacterTable = () => {
               episodes.push(...res.results);
               page = res.info.next ? page + 1 : -1;
            } catch (e) {
-               console.log(e);
                setIsLoading(false);
+               throw new Error(e);
            }
         } while (page !== -1);
         composeResultsHandler(episodes);

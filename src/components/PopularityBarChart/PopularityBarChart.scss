@@ -46,7 +46,9 @@
     &__bar {
       display: flex;
       flex-direction: column;
+      justify-content: flex-end;
       width: 10%;
+      height: 200px;
       margin-right: 0.5%;
       margin-left: 0.5%;
 

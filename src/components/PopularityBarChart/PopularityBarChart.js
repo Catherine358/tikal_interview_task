@@ -1,8 +1,8 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {getCharacterByName} from '../../services/ServerWork';
 import {CHARACTERS, EARTH_NAME} from '../../constants/Constants';
+import Spinner from '../Spinner';
 import './PopularityBarChart.scss';
-import Spinner from "../Spinner";
 
 const PopularityBarChart = () => {
     const [charactersData, setCharactersData] = useState([]);
@@ -23,8 +23,8 @@ const PopularityBarChart = () => {
                 setIsLoading(false);
             })
             .catch((e) => {
-                console.log(e);
                 setIsLoading(false);
+                throw new Error(e);
             });
     }, []);
 
@@ -41,11 +41,27 @@ const PopularityBarChart = () => {
       );
     };
 
+    const barsHeight = useMemo(() => {
+            const numbersOfEpisodes = charactersData.reduce((arr, currChar) => {
+                return arr.includes(currChar.episode.length) ? arr : [...arr, currChar.episode.length].sort((a, b) => a > b ? -1 : 1)
+            }, []);
+            return numbersOfEpisodes.reduce((arr, currEpisode, index) => {
+                return index === 0 ? [{
+                    episodes: currEpisode,
+                    height: 100,
+                }] : [...arr, {
+                    episodes: currEpisode,
+                    height: Math.floor((arr[index - 1].height * currEpisode) / arr[index - 1].episodes)
+                }];
+            }, []);
+    }, [charactersData]);
+
     const Bar = ({ data }) => {
+        const barHeight = barsHeight.find((b) => b.episodes === data.episode.length).height;
       return (
           <div className="bar-chart__container__bar">
               <span className="bar-chart__container__bar__title">{data.episode.length}</span>
-              <div style={{ backgroundColor: data.color, height: data.episode.length * 2 + 'px' }} />
+              <div style={{ backgroundColor: data.color, height: barHeight + '%' }} />
           </div>
       );
     };
