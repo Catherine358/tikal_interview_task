@@ -10,7 +10,8 @@ const PopularityBarChart = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
-    useEffect(() => {
+    const getAllGivenCharactersHandler = () => {
+        // function for fetching all 5 given characters from API
         const charPromises = CHARACTERS.map((char) => {
             const [name, surname] = char.name.split(' ');
             return getCharacterByName(name, surname);
@@ -28,6 +29,10 @@ const PopularityBarChart = () => {
                 setIsLoading(false);
                 setError(e.message);
             });
+    };
+
+    useEffect(() => {
+        getAllGivenCharactersHandler();
     }, []);
 
     const Legend = () => {
@@ -44,18 +49,18 @@ const PopularityBarChart = () => {
     };
 
     const barsHeight = useMemo(() => {
-            const numbersOfEpisodes = charactersData.reduce((arr, currChar) => {
-                return arr.includes(currChar.episode.length) ? arr : [...arr, currChar.episode.length].sort((a, b) => a > b ? -1 : 1)
-            }, []);
-            return numbersOfEpisodes.reduce((arr, currEpisode, index) => {
-                return index === 0 ? [{
-                    episodes: currEpisode,
-                    height: 100,
-                }] : [...arr, {
-                    episodes: currEpisode,
-                    height: Math.floor((arr[index - 1].height * currEpisode) / arr[index - 1].episodes)
-                }];
-            }, []);
+        // function for counting flexible height of each bar in bar chart according to number of episodes
+        const numbersOfEpisodes = charactersData.reduce((arr, currChar) => {
+            return arr.includes(currChar.episode.length) ? arr : [...arr, currChar.episode.length].sort((a, b) => a > b ? -1 : 1)
+        }, []);
+        return numbersOfEpisodes.reduce((arr, currEpisode, index) => {
+            return index === 0 ? [{
+                episodes: currEpisode,
+                height: 100,
+            }] : [...arr, {
+                episodes: currEpisode,
+                height: Math.floor((arr[index - 1].height * currEpisode) / arr[index - 1].episodes)
+            }];}, []);
     }, [charactersData]);
 
     const Bar = ({ data }) => {

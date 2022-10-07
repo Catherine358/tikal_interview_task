@@ -18,6 +18,7 @@ const MostUnpopularCharacterTable = () => {
     const [error, setError] = useState('');
 
     const composeResultsHandler = (results) => {
+        // function for counting how many episodes character has according to his id
         let newCharObj = {};
         results.forEach((result) => {
             newCharObj = result.characters.reduce((objChar, currChar) => {
@@ -37,6 +38,7 @@ const MostUnpopularCharacterTable = () => {
     };
 
     const getAllEpisodesHandler = async () => {
+        // function for receiving and saving all episodes from API
         let page = 1;
         const episodes = [];
         do {
@@ -53,6 +55,7 @@ const MostUnpopularCharacterTable = () => {
     };
 
     const getMinNumberOfEpisodesHandler = (currMin) => {
+        // function for finding the minimum number of episodes among all characters
       const sortedValues = Object.values(numberOfEpisodesAccordingToChar).reduce((arr, curr) => {
           return arr.includes(curr) ? arr : [
               ...arr,
@@ -64,6 +67,7 @@ const MostUnpopularCharacterTable = () => {
     };
 
     const getMultipleFilteredCharactersHandler = async () => {
+        // function for fetching multiple characters from API with the minimum number of episodes
         let minNumberOfEpisodes = 0;
         minNumberOfEpisodes = getMinNumberOfEpisodesHandler(minNumberOfEpisodes);
         do {
