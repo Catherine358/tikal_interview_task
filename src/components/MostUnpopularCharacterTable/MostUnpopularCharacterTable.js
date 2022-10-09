@@ -19,22 +19,38 @@ const MostUnpopularCharacterTable = () => {
 
     const composeResultsHandler = (results) => {
         // function for counting how many episodes character has according to his id
-        let newCharObj = {};
+        const charMap = {};
         results.forEach((result) => {
-            newCharObj = result.characters.reduce((objChar, currChar) => {
-                const currCharSplit = currChar.split('/');
+            result.characters.forEach((char) => {
+                const currCharSplit = char.split('/');
                 const charId = currCharSplit[currCharSplit.length - 1];
-                const charIdExists = Object.keys(objChar).includes(charId);
-                return !charIdExists ? {
-                    ...objChar,
-                    [charId]: 1,
-                } : {
-                    ...objChar,
-                    [charId]: objChar[charId] + 1,
-                };
-            }, {...newCharObj});
+               if (charMap[charId]) {
+                   charMap[charId] = charMap[charId] + 1;
+               } else {
+                   charMap[charId] = 1;
+               }
+            });
         });
-        setNumberOfEpisodesAccordingToChar(newCharObj);
+        const charMapArr = Object.keys(charMap)
+            .map((charObjKey) => ({ charId: charObjKey, numOfEpisodes: charMap[charObjKey] }))
+            .sort((a, b) => a.numOfEpisodes > b.numOfEpisodes ? 1 : -1);
+        let currNumOfEpisodes = -1;
+        const charMapArrByNumOfEpisodes = charMapArr.reduce((arr, currChar) => {
+            if (currChar.numOfEpisodes !== currNumOfEpisodes) {
+                currNumOfEpisodes = currChar.numOfEpisodes;
+                return [...arr, {
+                    numOfEpisodes: currChar.numOfEpisodes,
+                    charIds: currChar.charId,
+                }];
+            } else {
+                const updatedCharIds = `${arr[arr.length - 1].charIds},${currChar.charId}`;
+                return [...arr.filter((val) => val.numOfEpisodes !== currChar.numOfEpisodes), {
+                    numOfEpisodes: currChar.numOfEpisodes,
+                    charIds: updatedCharIds,
+                }];
+            }
+        }, []);
+        setNumberOfEpisodesAccordingToChar(charMapArrByNumOfEpisodes);
     };
 
     const getAllEpisodesHandler = async () => {
@@ -54,40 +70,31 @@ const MostUnpopularCharacterTable = () => {
         composeResultsHandler(episodes);
     };
 
-    const getMinNumberOfEpisodesHandler = (currMin) => {
-        // function for finding the minimum number of episodes among all characters
-      const sortedValues = Object.values(numberOfEpisodesAccordingToChar).reduce((arr, curr) => {
-          return arr.includes(curr) ? arr : [
-              ...arr,
-              curr,
-          ].sort((a, b) => a > b ? 1 : -1);
-      }, []);
-        const idxOfMinNumberOfEpisodes = currMin > 0 ? sortedValues.findIndex((val) => val === currMin) + 1 : 0;
-        return sortedValues[idxOfMinNumberOfEpisodes];
-    };
-
     const getMultipleFilteredCharactersHandler = async () => {
         // function for fetching multiple characters from API with the minimum number of episodes
-        let minNumberOfEpisodes = 0;
-        minNumberOfEpisodes = getMinNumberOfEpisodesHandler(minNumberOfEpisodes);
+        let loadNext = true;
+        let count = 0;
         do {
             try {
-                const multipleCharUrl = Object.keys(numberOfEpisodesAccordingToChar).reduce((str, currKey) => {
-                    return numberOfEpisodesAccordingToChar[currKey] > minNumberOfEpisodes ? str : str ? str + ',' + currKey : str + currKey;
-                }, '');
-                const res = await getMultipleCharacters(multipleCharUrl);
+                // assuming that there is at least one character
+                const res = await getMultipleCharacters(numberOfEpisodesAccordingToChar[count].charIds);
                 const filteredRes = res.filter((r) => r.origin.name === EARTH_NAME);
                 if (filteredRes.length > 0) {
                     const randomIdxOfUnpopularChar = Math.floor(Math.random() * filteredRes.length);
                     setMostUnpopularChar(filteredRes[randomIdxOfUnpopularChar]);
                     setIsLoading(false);
-                    minNumberOfEpisodes = -1;
+                    loadNext = false;
                 }
+                count++;
             } catch (e) {
                 setIsLoading(false);
                 setError(e.message);
             }
-        } while (minNumberOfEpisodes !== -1);
+        } while (loadNext || numberOfEpisodesAccordingToChar.length < count);
+        if (count >= numberOfEpisodesAccordingToChar.length) {
+            setIsLoading(false);
+            setError('No characters from Earth-137 found.');
+        }
     };
 
     useEffect(() => {

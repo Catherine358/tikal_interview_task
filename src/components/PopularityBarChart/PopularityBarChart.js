@@ -5,6 +5,29 @@ import Spinner from '../Spinner';
 import ErrorIndicator from '../ErrorIndicator';
 import './PopularityBarChart.scss';
 
+const Legend = ({ data }) => {
+    return (
+        <div className="bar-chart__legend">
+            {data.map((char) => (
+                <div key={char.name + 'legend'} className="bar-chart__legend__row">
+                    <div className="bar-chart__legend__row__color" style={{ backgroundColor: char.color }} />
+                    <span>{char.name}</span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const Bar = ({ data, allBarsHeight }) => {
+    const barHeight = allBarsHeight.find((b) => b.episodes === data.episode.length).height;
+    return (
+        <div className="bar-chart__container__bar">
+            <span className="bar-chart__container__bar__title">{data.episode.length}</span>
+            <div style={{ backgroundColor: data.color, height: barHeight + '%' }} />
+        </div>
+    );
+};
+
 const PopularityBarChart = () => {
     const [charactersData, setCharactersData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -13,8 +36,7 @@ const PopularityBarChart = () => {
     const getAllGivenCharactersHandler = () => {
         // function for fetching all 5 given characters from API
         const charPromises = CHARACTERS.map((char) => {
-            const [name, surname] = char.name.split(' ');
-            return getCharacterByName(name, surname);
+            return getCharacterByName(char.name);
         });
         Promise.all(charPromises)
             .then((results) => {
@@ -35,24 +57,11 @@ const PopularityBarChart = () => {
         getAllGivenCharactersHandler();
     }, []);
 
-    const Legend = () => {
-      return (
-        <div className="bar-chart__legend">
-            {charactersData.map((char) => (
-                <div key={char.name + 'legend'} className="bar-chart__legend__row">
-                    <div className="bar-chart__legend__row__color" style={{ backgroundColor: char.color }} />
-                    <span>{char.name}</span>
-                </div>
-            ))}
-        </div>
-      );
-    };
-
     const barsHeight = useMemo(() => {
         // function for counting flexible height of each bar in bar chart according to number of episodes
         const numbersOfEpisodes = charactersData.reduce((arr, currChar) => {
-            return arr.includes(currChar.episode.length) ? arr : [...arr, currChar.episode.length].sort((a, b) => a > b ? -1 : 1)
-        }, []);
+            return arr.includes(currChar.episode.length) ? arr : [...arr, currChar.episode.length];
+        }, []).sort((a, b) => a > b ? -1 : 1);
         return numbersOfEpisodes.reduce((arr, currEpisode, index) => {
             return index === 0 ? [{
                 episodes: currEpisode,
@@ -62,16 +71,6 @@ const PopularityBarChart = () => {
                 height: Math.floor((arr[index - 1].height * currEpisode) / arr[index - 1].episodes)
             }];}, []);
     }, [charactersData]);
-
-    const Bar = ({ data }) => {
-        const barHeight = barsHeight.find((b) => b.episodes === data.episode.length).height;
-      return (
-          <div className="bar-chart__container__bar">
-              <span className="bar-chart__container__bar__title">{data.episode.length}</span>
-              <div style={{ backgroundColor: data.color, height: barHeight + '%' }} />
-          </div>
-      );
-    };
 
     return (
       <div className="bar-chart">
@@ -84,10 +83,10 @@ const PopularityBarChart = () => {
                       <ErrorIndicator error={error} />
                   ) : (
                       <>
-                          <Legend />
+                          <Legend data={charactersData} />
                           <div className="bar-chart__container">
                               {charactersData.map((char) => (
-                                  <Bar key={char.name} data={char} />
+                                  <Bar key={char.name} data={char} allBarsHeight={barsHeight} />
                               ))}
                           </div>
                       </>

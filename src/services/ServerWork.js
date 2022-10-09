@@ -20,8 +20,8 @@ export const getMultipleCharacters = (charIdsStr) => {
         });
 };
 
-export const getCharacterByName = (name, surname) => {
-    return fetch(`${BASE_URL}/character/?name=${name}%20${surname}`)
+export const getCharacterByName = (charName) => {
+    return fetch(`${BASE_URL}/character/?name=${encodeURI(charName)}`)
         .then((response) => {
             if (response.status !== 200) {
                 throw new Error('Could not fetch');
